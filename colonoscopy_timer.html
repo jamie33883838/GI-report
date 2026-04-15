@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colonoscopy Timing Calculator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+      padding: 20px 24px 22px;
+      width: 100%;
+      max-width: 960px;
+    }
+
+    /* ── Header ── */
+    .card-header {
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1a3a5c;
+      margin-bottom: 2px;
+    }
+
+    .subtitle {
+      font-size: 0.78rem;
+      color: #6b7a8d;
+    }
+
+    /* ── Two-column body ── */
+    .two-col {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .col-left {
+      flex: 0 0 310px;
+    }
+
+    .col-right {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7a8d;
+      margin-bottom: 8px;
+    }
+
+    /* ── Time input rows ── */
+    .time-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .time-row label {
+      font-size: 0.86rem;
+      color: #2d3748;
+      flex: 0 0 160px;
+      font-weight: 500;
+    }
+
+    .time-inputs {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .time-inputs input {
+      width: 46px;
+      padding: 5px 4px;
+      text-align: center;
+      font-size: 0.97rem;
+      font-family: "SF Mono", "Fira Mono", monospace;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 6px;
+      color: #1a202c;
+      background: #f7fafc;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    .time-inputs input::-webkit-inner-spin-button,
+    .time-inputs input::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; }
+
+    .time-inputs input:focus { outline: none; border-color: #3b82f6; background: #fff; }
+    .time-inputs input.error { border-color: #e53e3e; background: #fff5f5; }
+
+    .colon {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #4a5568;
+      user-select: none;
+    }
+
+    /* ── Calculate button ── */
+    .btn-calculate {
+      margin-top: 12px;
+      width: 100%;
+      padding: 9px;
+      background: #1a3a5c;
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-calculate:hover { background: #2b5282; }
+    .btn-calculate:active { background: #1a365d; }
+
+    /* ── Error ── */
+    .error-msg {
+      display: none;
+      margin-top: 8px;
+      padding: 7px 11px;
+      background: #fff5f5;
+      border: 1.5px solid #fc8181;
+      border-radius: 7px;
+      color: #c53030;
+      font-size: 0.8rem;
+    }
+
+    /* ── Result rows ── */
+    .results { margin-top: 12px; display: none; }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-radius: 6px;
+      margin-bottom: 5px;
+      background: #ebf8ff;
+      border: 1px solid #bee3f8;
+    }
+
+    .result-label { font-size: 0.82rem; color: #2c5282; font-weight: 500; }
+
+    .result-value {
+      font-family: "SF Mono", "Fira Mono", monospace;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #1a3a5c;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+
+    /* ── Right column divider ── */
+    .col-right-inner {
+      border-left: 1px solid #e2e8f0;
+      padding-left: 20px;
+      height: 100%;
+    }
+
+    /* ── Note + badge row ── */
+    .note-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-top: 8px;
+    }
+
+    .note-left { flex: 1; min-width: 0; }
+
+    textarea {
+      width: 100%;
+      padding: 9px 11px;
+      font-family: "SF Mono", "Fira Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      color: #1a202c;
+      background: #f7fafc;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 7px;
+      resize: none;
+      overflow: hidden;
+    }
+
+    textarea:focus { outline: none; border-color: #3b82f6; }
+
+    .textarea-placeholder {
+      width: 100%;
+      height: 162px;
+      padding: 9px 11px;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      color: #a0aec0;
+      background: #f7fafc;
+      border: 1.5px dashed #cbd5e0;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .btn-copy {
+      margin-top: 7px;
+      width: 100%;
+      padding: 8px;
+      background: #38a169;
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-copy:hover { background: #2f855a; }
+    .btn-copy.copied { background: #2f855a; }
+    .btn-copy:disabled { background: #a0aec0; cursor: default; }
+
+    /* ── Surprise panel ── */
+    .surprise-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 110px;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      border-radius: 9px;
+      padding: 10px 8px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.09);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .badge.show {
+      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      pointer-events: auto;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.7) translateY(6px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .badge-emoji  { font-size: 1.5rem; line-height: 1; margin-bottom: 3px; }
+    .badge-title  { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.65; margin-bottom: 2px; }
+    .badge-text   { font-size: 0.8rem; font-weight: 700; line-height: 1.2; }
+
+    .badge.green  { background: #f0fff4; border: 1.5px solid #9ae6b4; color: #22543d; }
+    .badge.yellow { background: #fffff0; border: 1.5px solid #f6e05e; color: #744210; }
+    .badge.orange { background: #fffaf0; border: 1.5px solid #fbd38d; color: #7b341e; }
+
+    /* ── Toggle button groups ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-row .row-label {
+      font-size: 0.86rem;
+      color: #2d3748;
+      font-weight: 500;
+      flex: 0 0 160px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-btn {
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 20px;
+      background: #f7fafc;
+      color: #4a5568;
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+
+    .toggle-btn:hover { border-color: #3b82f6; color: #2b6cb0; background: #ebf8ff; }
+
+    .toggle-btn.active {
+      background: #1a3a5c;
+      border-color: #1a3a5c;
+      color: #fff;
+    }
+
+    /* ── Pre-medication option rows ── */
+    .premed-option {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 7px;
+      border-radius: 6px;
+      border: 1.5px solid #e2e8f0;
+      margin-bottom: 4px;
+      cursor: pointer;
+      background: #f7fafc;
+      transition: border-color 0.12s, background 0.12s;
+    }
+
+    .premed-option:hover { border-color: #90cdf4; background: #ebf8ff; }
+    .premed-option.active { border-color: #1a3a5c; background: #ebf8ff; }
+
+    .pm-num {
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #a0aec0;
+      width: 12px;
+    }
+
+    .premed-option.active .pm-num { color: #1a3a5c; }
+
+    .pm-content {
+      font-size: 0.76rem;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2px;
+      line-height: 1.4;
+    }
+
+    .busco-btn {
+      padding: 1px 7px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 20px;
+      background: #fff;
+      color: #4a5568;
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+
+    .busco-btn:hover { border-color: #3b82f6; color: #2b6cb0; }
+    .busco-btn.on { background: #2f855a; border-color: #2f855a; color: #fff; }
+
+    .dose-input {
+      width: 42px;
+      padding: 3px 4px;
+      text-align: center;
+      font-size: 0.88rem;
+      font-family: "SF Mono", "Fira Mono", monospace;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 5px;
+      color: #1a202c;
+      background: #f7fafc;
+      -moz-appearance: textfield;
+    }
+
+    .dose-input::-webkit-inner-spin-button,
+    .dose-input::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; }
+
+
+    .dose-input:focus { outline: none; border-color: #3b82f6; background: #fff; }
+
+    /* ── Pre-med output box on right ── */
+    .premed-output-box {
+      width: 100%;
+      padding: 8px 11px;
+      font-family: "SF Mono", "Fira Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: #1a202c;
+      background: #f7fafc;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 7px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 34px;
+    }
+
+    .premed-output-box.empty { color: #a0aec0; font-style: italic; }
+
+    .btn-copy-sm {
+      margin-top: 6px;
+      width: 100%;
+      padding: 6px;
+      background: #38a169;
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-copy-sm:hover { background: #2f855a; }
+    .btn-copy-sm.copied { background: #2f855a; }
+    .btn-copy-sm:disabled { background: #a0aec0; cursor: default; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .header-text { flex: 1; }
+
+    .btn-reset {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 13px;
+      background: #fff5f5;
+      border: 1.5px solid #fc8181;
+      border-radius: 20px;
+      color: #c53030;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      font-family: inherit;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-reset:hover {
+      background: #fed7d7;
+      border-color: #e53e3e;
+      color: #9b2c2c;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <div class="card-header">
+    <h1>Colonoscopy Timing Calculator</h1>
+    <p class="subtitle">Enter times in 24-hour format (HH : MM : SS) — press Enter to calculate</p>
+  </div>
+
+  <div class="two-col">
+
+    <!-- LEFT: inputs + results -->
+    <div class="col-left">
+      <div class="section-title">Pre-medication</div>
+
+      <div class="premed-option" id="pm-opt-1" onclick="selectPremedOption(1)">
+        <span class="pm-num">1</span>
+        <div class="pm-content">
+          <button class="busco-btn" id="busco-1" onclick="event.stopPropagation(); toggleBusco(1)">Busco 10mg IV</button>
+          + Dormicum 1mg IV + Rapifen 0.5mg IV + Propofol
+          <input class="dose-input" id="prop-1" type="number" min="0" placeholder="—" oninput="updatePremed()" onclick="event.stopPropagation()">mg IV
+        </div>
+      </div>
+
+      <div class="premed-option" id="pm-opt-2" onclick="selectPremedOption(2)">
+        <span class="pm-num">2</span>
+        <div class="pm-content">
+          <button class="busco-btn" id="busco-2" onclick="event.stopPropagation(); toggleBusco(2)">Busco 10mg IV</button>
+          + Dormicum 0.75mg IV + Rapifen 0.375mg IV + Propofol
+          <input class="dose-input" id="prop-2" type="number" min="0" placeholder="—" oninput="updatePremed()" onclick="event.stopPropagation()">mg IV
+        </div>
+      </div>
+
+      <div class="premed-option" id="pm-opt-3" onclick="selectPremedOption(3)">
+        <span class="pm-num">3</span>
+        <div class="pm-content">
+          <button class="busco-btn" id="busco-3" onclick="event.stopPropagation(); toggleBusco(3)">Busco 10mg IV</button>
+          + Dormicum 0.5mg IV + Rapifen 0.25mg IV + Propofol
+          <input class="dose-input" id="prop-3" type="number" min="0" placeholder="—" oninput="updatePremed()" onclick="event.stopPropagation()">mg IV
+        </div>
+      </div>
+
+      <div class="premed-option" id="pm-opt-4" onclick="selectPremedOption(4)" style="margin-bottom:10px;">
+        <span class="pm-num">4</span>
+        <div class="pm-content">Butylscopolamine 10mg IM</div>
+      </div>
+
+      <div class="section-title">Bowel Preparation</div>
+
+      <div class="toggle-row">
+        <span class="row-label">Prep agent:</span>
+        <div class="toggle-group" id="grp-agent">
+          <button class="toggle-btn" data-group="agent" data-value="Bowklean" onclick="toggleBtn(this)">Bowklean</button>
+          <button class="toggle-btn" data-group="agent" data-value="GI Klean powder" onclick="toggleBtn(this)">GI Klean powder</button>
+          <button class="toggle-btn" data-group="agent" data-value="Castor oil 30cc PO + Dulcolax 5mg 5# PO + Bisacodyl 2# REC" onclick="toggleBtn(this)">Castor oil 30cc PO + Dulcolax 5mg 5# PO + Bisacodyl 2# REC</button>
+        </div>
+      </div>
+
+      <div class="toggle-row" style="margin-bottom:14px;">
+        <span class="row-label">Prep quality:</span>
+        <div class="toggle-group" id="grp-quality">
+          <button class="toggle-btn" data-group="quality" data-value="Excellent" onclick="toggleBtn(this)">Excellent</button>
+          <button class="toggle-btn" data-group="quality" data-value="Good" onclick="toggleBtn(this)">Good</button>
+          <button class="toggle-btn" data-group="quality" data-value="Fair" onclick="toggleBtn(this)">Fair</button>
+          <button class="toggle-btn" data-group="quality" data-value="Poor" onclick="toggleBtn(this)">Poor</button>
+          <button class="toggle-btn" data-group="quality" data-value="Inadequate" onclick="toggleBtn(this)">Inadequate</button>
+        </div>
+      </div>
+
+      <div class="section-title">Procedure Times</div>
+
+      <div class="time-row">
+        <label>Start at:</label>
+        <div class="time-inputs" data-group="start">
+          <input type="number" id="start-h" min="0" max="23" placeholder="HH">
+          <span class="colon">:</span>
+          <input type="number" id="start-m" min="0" max="59" placeholder="MM">
+          <span class="colon">:</span>
+          <input type="number" id="start-s" min="0" max="59" placeholder="SS">
+        </div>
+      </div>
+
+      <div class="time-row">
+        <label>Reach cecum at:</label>
+        <div class="time-inputs" data-group="cecum">
+          <input type="number" id="cecum-h" min="0" max="23" placeholder="HH">
+          <span class="colon">:</span>
+          <input type="number" id="cecum-m" min="0" max="59" placeholder="MM">
+          <span class="colon">:</span>
+          <input type="number" id="cecum-s" min="0" max="59" placeholder="SS">
+        </div>
+      </div>
+
+      <div class="time-row">
+        <label>Splenic flexure at:</label>
+        <div class="time-inputs" data-group="splen">
+          <input type="number" id="splen-h" min="0" max="23" placeholder="HH">
+          <span class="colon">:</span>
+          <input type="number" id="splen-m" min="0" max="59" placeholder="MM">
+          <span class="colon">:</span>
+          <input type="number" id="splen-s" min="0" max="59" placeholder="SS">
+        </div>
+      </div>
+
+      <div class="time-row">
+        <label>Exam ended at:</label>
+        <div class="time-inputs" data-group="end">
+          <input type="number" id="end-h" min="0" max="23" placeholder="HH">
+          <span class="colon">:</span>
+          <input type="number" id="end-m" min="0" max="59" placeholder="MM">
+          <span class="colon">:</span>
+          <input type="number" id="end-s" min="0" max="59" placeholder="SS">
+        </div>
+      </div>
+
+      <button class="btn-calculate" onclick="calculate()">Calculate</button>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <!-- RIGHT: calculated timings + clinical note + badges -->
+    <div class="col-right">
+      <div class="col-right-inner">
+        <!-- Pre-medication output -->
+        <div class="section-title">Pre-medication</div>
+        <div class="premed-output-box empty" id="premed-output">Select a route and enter doses on the left</div>
+        <button class="btn-copy-sm" id="btn-copy-premed" onclick="copyPremed()" disabled>Copy Pre-medication</button>
+
+        <div style="margin-top:12px;"></div>
+
+        <!-- Calculated timings + surprise panel side by side -->
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <div class="results" id="results" style="flex:1; min-width:0;">
+            <div class="section-title">Calculated Timings</div>
+            <div class="result-row">
+              <span class="result-label">Intubation (Start → Cecum)</span>
+              <span class="result-value" id="res-intubation">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Proximal inspection (Cecum → Splenic)</span>
+              <span class="result-value" id="res-proximal">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Withdrawal (Cecum → End)</span>
+              <span class="result-value" id="res-withdrawal">—</span>
+            </div>
+          </div>
+          <div class="surprise-panel" id="surprise-panel" style="padding-top:20px;">
+            <div class="badge green"  id="badge-intubation"><div class="badge-emoji"></div><div class="badge-title"></div><div class="badge-text"></div></div>
+            <div class="badge orange" id="badge-withdrawal"><div class="badge-emoji"></div><div class="badge-title"></div><div class="badge-text"></div></div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:12px;">Clinical Note Output</div>
+        <div class="note-left">
+          <div id="note-placeholder" class="textarea-placeholder">
+            Results will appear here after calculating
+          </div>
+          <textarea id="note-output" style="display:none;" readonly></textarea>
+          <button class="btn-copy" id="btn-copy" onclick="copyNote()" disabled>Copy to Clipboard</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end .two-col -->
+</div><!-- end .card -->
+
+<script>
+  const allInputs = Array.from(document.querySelectorAll('.time-inputs input'));
+
+  allInputs.forEach((input, idx) => {
+    input.addEventListener('input', function () {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      if (this.value.length >= 2) {
+        const max = parseInt(this.max);
+        if (parseInt(this.value) > max) this.value = String(max);
+        if (idx < allInputs.length - 1) allInputs[idx + 1].focus();
+      }
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Backspace' && this.value === '' && idx > 0) allInputs[idx - 1].focus();
+      if (e.key === 'Enter') { e.preventDefault(); calculate(); }
+    });
+  });
+
+  function toSeconds(h, m, s) { return h * 3600 + m * 60 + s; }
+
+  function toHMS(sec) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+  }
+
+  function getTime(prefix) {
+    const h = parseInt(document.getElementById(prefix + '-h').value);
+    const m = parseInt(document.getElementById(prefix + '-m').value);
+    const s = parseInt(document.getElementById(prefix + '-s').value);
+    return { h, m, s, valid: !isNaN(h) && !isNaN(m) && !isNaN(s) };
+  }
+
+  function fmtTime(prefix) {
+    const t = getTime(prefix);
+    return t.valid ? [t.h, t.m, t.s].map(v => String(v).padStart(2, '0')).join(':') : '??:??:??';
+  }
+
+  function highlightGroup(g) {
+    document.querySelectorAll(`[data-group="${g}"] input`).forEach(i => i.classList.add('error'));
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.time-inputs input').forEach(i => i.classList.remove('error'));
+    const err = document.getElementById('error-msg');
+    err.style.display = 'none';
+    err.textContent = '';
+  }
+
+  function showError(msg, groups) {
+    const err = document.getElementById('error-msg');
+    err.textContent = msg;
+    err.style.display = 'block';
+    if (groups) groups.forEach(highlightGroup);
+    document.getElementById('results').style.display = 'none';
+  }
+
+  function setBadge(id, colorClass, emoji, title, text) {
+    const el = document.getElementById(id);
+    el.className = 'badge ' + colorClass;
+    el.querySelector('.badge-emoji').textContent = emoji;
+    el.querySelector('.badge-title').textContent = title;
+    el.querySelector('.badge-text').textContent  = text;
+    el.classList.add('show');
+  }
+
+  function hideBadge(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('show');
+    el.style.opacity = '0';
+  }
+
+  let activePremedOption = null; // 1–4
+  const buscoState = { 1: false, 2: false, 3: false }; // IV busco toggles
+
+  const premedDrugs = {
+    1: { dorm: '1',    rapi: '0.5',   propId: 'prop-1' },
+    2: { dorm: '0.75', rapi: '0.375', propId: 'prop-2' },
+    3: { dorm: '0.5',  rapi: '0.25',  propId: 'prop-3' },
+  };
+
+  function selectPremedOption(n) {
+    activePremedOption = n;
+    [1,2,3,4].forEach(i => document.getElementById('pm-opt-' + i).classList.toggle('active', i === n));
+    updatePremed();
+  }
+
+  function toggleBusco(n) {
+    buscoState[n] = !buscoState[n];
+    const btn = document.getElementById('busco-' + n);
+    btn.classList.toggle('on', buscoState[n]);
+    btn.textContent = buscoState[n] ? 'Busco 10mg IV ✓' : 'Busco 10mg IV';
+    updatePremed();
+  }
+
+  function updatePremed() {
+    const box     = document.getElementById('premed-output');
+    const copyBtn = document.getElementById('btn-copy-premed');
+    const n       = activePremedOption;
+
+    if (!n) {
+      box.textContent = 'Select an option on the left';
+      box.classList.add('empty');
+      copyBtn.disabled = true;
+      return;
+    }
+
+    let text = '';
+    if (n === 4) {
+      text = 'Butylscopolamine 10 mg IM';
+    } else {
+      const d    = premedDrugs[n];
+      const prop = document.getElementById(d.propId).value;
+      const parts = [];
+      if (buscoState[n]) parts.push('Butylscopolamine 10 mg IV');
+      parts.push(`Dormicum ${d.dorm} mg IV`);
+      parts.push(`Rapifen ${d.rapi} mg IV`);
+      if (prop) parts.push(`Propofol ${prop} mg IV`);
+      text = parts.join(' + ');
+    }
+
+    box.textContent = text;
+    box.classList.remove('empty');
+    copyBtn.disabled = false;
+  }
+
+  function copyPremed() {
+    const text = document.getElementById('premed-output').textContent;
+    const btn  = document.getElementById('btn-copy-premed');
+
+    const div = document.createElement('div');
+    div.contentEditable = 'true';
+    div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;white-space:pre;font-family:"Courier New",Courier,monospace;font-size:11pt;line-height:1.6;background:#ffffff;color:#000000;';
+    div.textContent = text;
+    document.body.appendChild(div);
+
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(div);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand('copy');
+    sel.removeAllRanges();
+    document.body.removeChild(div);
+
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Pre-medication'; btn.classList.remove('copied'); }, 2000);
+  }
+
+  function toggleBtn(btn) {
+    const group = btn.dataset.group;
+    // Deselect all in same group
+    document.querySelectorAll(`.toggle-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+    // Select this one (toggle off if already active)
+    btn.classList.add('active');
+  }
+
+  function getSelected(group) {
+    const active = document.querySelector(`.toggle-btn[data-group="${group}"].active`);
+    return active ? active.dataset.value : null;
+  }
+
+  function calculate() {
+    clearErrors();
+
+    const start = getTime('start');
+    const cecum = getTime('cecum');
+    const splen = getTime('splen');
+    const end   = getTime('end');
+
+    const missing = [];
+    if (!start.valid) missing.push('Start');
+    if (!cecum.valid) missing.push('Reach cecum');
+    if (!splen.valid) missing.push('Splenic flexure');
+    if (!end.valid)   missing.push('Exam ended');
+    if (missing.length) { showError('Please fill in: ' + missing.join(', ') + '.'); return; }
+
+    const startSec = toSeconds(start.h, start.m, start.s);
+    const cecumSec = toSeconds(cecum.h, cecum.m, cecum.s);
+    const splenSec = toSeconds(splen.h, splen.m, splen.s);
+    const endSec   = toSeconds(end.h,   end.m,   end.s);
+
+    if (cecumSec <= startSec) { showError('Cecum time must be after start time.', ['start', 'cecum']); return; }
+    if (splenSec <= cecumSec) { showError('Splenic flexure time must be after cecum time.', ['cecum', 'splen']); return; }
+    if (endSec   <= cecumSec) { showError('Exam end time must be after cecum time.', ['cecum', 'end']); return; }
+
+    const intubation = cecumSec - startSec;
+    const proximal   = splenSec - cecumSec;
+    const withdrawal = endSec   - cecumSec;
+
+    const intubationStr = toHMS(intubation);
+    const proximalStr   = toHMS(proximal);
+    const withdrawalStr = toHMS(withdrawal);
+
+    document.getElementById('res-intubation').textContent = intubationStr;
+    document.getElementById('res-proximal').textContent   = proximalStr;
+    document.getElementById('res-withdrawal').textContent = withdrawalStr;
+    document.getElementById('results').style.display = 'block';
+
+    // Clinical note
+    const ln = (label, value) => `${label} ${value}`;
+    const agent   = getSelected('agent')   || '—';
+    const quality = getSelected('quality') || '—';
+    const note = [
+      ln('Bowel preparation agent:',        agent),
+      ln('Bowel preparation quality:',      quality),
+      '',
+      ln('Procedure start:',                fmtTime('start')),
+      ln('Cecum reached:',                  fmtTime('cecum')),
+      ln('Splenic flexure reached:',        fmtTime('splen')),
+      ln('Procedure end:',                  fmtTime('end')),
+      '',
+      ln('Intubation time:',                intubationStr),
+      ln('Proximal colon inspection time:',  proximalStr),
+      ln('Withdrawal time:',                withdrawalStr),
+    ].join('\n');
+
+    document.getElementById('note-placeholder').style.display = 'none';
+    const ta = document.getElementById('note-output');
+    ta.style.display = 'block';
+    ta.value = note;
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+
+    const copyBtn = document.getElementById('btn-copy');
+    copyBtn.disabled = false;
+    copyBtn.textContent = 'Copy to Clipboard';
+    copyBtn.classList.remove('copied');
+
+    // Badges
+    hideBadge('badge-intubation');
+    hideBadge('badge-withdrawal');
+
+    if (intubation < 120) {
+      setBadge('badge-intubation', 'green', '🌟', 'Intubation', 'Excellent!');
+    } else if (intubation < 300) {
+      setBadge('badge-intubation', 'yellow', '👍', 'Intubation', 'Good job!');
+    }
+
+    if (withdrawal < 480) {
+      setBadge('badge-withdrawal', 'orange', '⚡', 'Withdrawal', 'A bit too fast!');
+    }
+  }
+
+  function copyNote() {
+    const text = document.getElementById('note-output').value;
+    const btn = document.getElementById('btn-copy');
+
+    const div = document.createElement('div');
+    div.contentEditable = 'true';
+    div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;white-space:pre;font-family:"Courier New",Courier,monospace;font-size:11pt;line-height:1.6;background:#ffffff;color:#000000;';
+    div.textContent = text;
+    document.body.appendChild(div);
+
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(div);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand('copy');
+    sel.removeAllRanges();
+    document.body.removeChild(div);
+
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2000);
+  }
+</script>
+</body>
+</html>

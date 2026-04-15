@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abd Sono Report Helper</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      background: #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      color: #1e293b;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      background: linear-gradient(135deg, #0f2d5e 0%, #1d4ed8 100%);
+      color: white;
+      padding: 11px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      text-transform: uppercase;
+    }
+
+    #header::before {
+      content: '🔬';
+      font-size: 16px;
+    }
+
+    /* ── LAYOUT ── */
+    #main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── LEFT PANEL ── */
+    #left {
+      width: 37%;
+      min-width: 290px;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #mode-btns {
+      display: flex;
+      gap: 8px;
+      padding: 14px 14px 10px;
+      flex-shrink: 0;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      border: 1.5px solid #334155;
+      border-radius: 999px;
+      cursor: pointer;
+      background: #1e293b;
+      color: #94a3b8;
+      transition: all 0.2s;
+    }
+
+    .mode-btn:hover { background: #334155; color: #e2e8f0; border-color: #475569; }
+
+    #btn-old.active {
+      background: #1d4ed8;
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+    }
+
+    #btn-new.active {
+      background: #059669;
+      border-color: #10b981;
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.25);
+    }
+
+    #left-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 14px 20px;
+      scrollbar-width: thin;
+      scrollbar-color: #334155 transparent;
+    }
+
+    #left-content::-webkit-scrollbar { width: 4px; }
+    #left-content::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+    /* Old patient */
+    #old-area p {
+      color: #64748b;
+      font-size: 11px;
+      margin-bottom: 7px;
+      letter-spacing: 0.02em;
+    }
+
+    #old-area textarea {
+      width: 100%;
+      height: 255px;
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1.5px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 11.5px;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #old-area textarea:focus { border-color: #3b82f6; }
+
+    .parse-btn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      background: #1d4ed8;
+      color: white;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .parse-btn:hover { background: #2563eb; }
+    .parse-btn:active { transform: scale(0.98); }
+
+    /* New patient sections */
+    .left-section { margin-bottom: 16px; }
+
+    .left-section-title {
+      font-size: 9.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #38bdf8;
+      padding: 6px 0 6px;
+      border-bottom: 1px solid #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .left-subsection { margin-bottom: 9px; }
+
+    .left-subsection-label {
+      font-size: 10px;
+      color: #475569;
+      margin-bottom: 5px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .finding-btn {
+      padding: 3px 10px;
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      transition: all 0.15s;
+      line-height: 1.5;
+    }
+
+    .finding-btn:hover { background: #334155; color: #e2e8f0; border-color: #475569; }
+
+    .finding-btn.selected {
+      background: #064e3b;
+      border-color: #10b981;
+      color: #6ee7b7;
+      font-weight: 600;
+    }
+
+    .finding-btn.selected:hover { background: #065f46; }
+
+    /* ── RIGHT PANEL ── */
+    #right {
+      flex: 1;
+      background: #f1f5f9;
+      overflow-y: auto;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+
+    #right::-webkit-scrollbar { width: 5px; }
+    #right::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    /* Reset bar */
+    .reset-bar { display: flex; justify-content: flex-end; flex-shrink: 0; }
+
+    .reset-btn {
+      padding: 5px 16px;
+      background: transparent;
+      color: #94a3b8;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: #fef3c7;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+
+    /* Right section cards */
+    .right-section {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid #e8eef4;
+      transition: box-shadow 0.2s;
+    }
+
+    .right-section:focus-within {
+      box-shadow: 0 0 0 2px #bfdbfe, 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .right-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 14px 6px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .right-section-title {
+      font-size: 9.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #64748b;
+    }
+
+    .copy-btn {
+      padding: 2px 12px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 10.5px;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { background: #dbeafe; border-color: #93c5fd; }
+    .copy-btn.copied { background: #d1fae5; border-color: #6ee7b7; color: #065f46; }
+
+    /* Auto-height textarea — grows with content */
+    .right-section textarea {
+      width: 100%;
+      padding: 8px 14px 10px;
+      border: none;
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #1e293b;
+      background: transparent;
+      resize: none;
+      overflow: hidden;
+      outline: none;
+      min-height: 38px;
+      display: block;
+    }
+
+    /* Section accent colours */
+    .right-section.dx .right-section-title { color: #dc2626; }
+    .right-section.dx .copy-btn { background: #fff1f2; color: #dc2626; border-color: #fecaca; }
+    .right-section.dx .copy-btn:hover { background: #ffe4e6; }
+    .right-section.dx:focus-within { box-shadow: 0 0 0 2px #fecaca, 0 2px 6px rgba(0,0,0,0.08); }
+
+    .right-section.comm .right-section-title { color: #059669; }
+    .right-section.comm .copy-btn { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+    .right-section.comm .copy-btn:hover { background: #d1fae5; }
+    .right-section.comm:focus-within { box-shadow: 0 0 0 2px #a7f3d0, 0 2px 6px rgba(0,0,0,0.08); }
+  </style>
+</head>
+<body>
+
+<div id="header">Abdominal Sono Report Helper</div>
+
+<div id="main">
+  <div id="left">
+    <div id="mode-btns">
+      <button class="mode-btn" id="btn-old" onclick="setMode('old')">Old Patient</button>
+      <button class="mode-btn" id="btn-new" onclick="setMode('new')">New Patient</button>
+    </div>
+    <div id="left-content">
+      <p style="color:#475569; font-size:11px; margin-top:6px;">Select a mode above to begin.</p>
+    </div>
+  </div>
+
+  <div id="right"></div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const SECTIONS = [
+  { key: 'purpose',  label: 'Purpose of Examination', cls: '' },
+  { key: 'liver',    label: 'Liver',                  cls: '' },
+  { key: 'biliary',  label: 'Biliary System',          cls: '' },
+  { key: 'pancreas', label: 'Pancreas',                cls: '' },
+  { key: 'spleen',   label: 'Spleen',                  cls: '' },
+  { key: 'kidney',   label: 'Kidney',                  cls: '' },
+  { key: 'others',   label: 'Others',                  cls: '' },
+  { key: 'diagnosis',label: 'Diagnosis',               cls: 'dx' },
+  { key: 'comments', label: 'Comments',                cls: 'comm' },
+];
+
+const FINDINGS = [
+  // Purpose
+  { id:'pu1', section:'purpose', label:'Abnormal liver function',  description:'Abnormal liver function',  diagnosis:null },
+  { id:'pu2', section:'purpose', label:'Viral hepatitis carrier',  description:'Viral hepatitis carrier',  diagnosis:null },
+  { id:'pu3', section:'purpose', label:'Abdominal pain',           description:'Abdominal pain',           diagnosis:null },
+  { id:'pu4', section:'purpose', label:'Body weight loss',         description:'Body weight loss',         diagnosis:null },
+  { id:'pu5', section:'purpose', label:'Hepatic lesion follow up', description:'Hepatic lesion follow up', diagnosis:null },
+  { id:'pu6', section:'purpose', label:'Fever of unknown origin',  description:'Fever of unknown origin',  diagnosis:null },
+
+  // Liver – Parenchyma
+  { id:'lpa1', section:'liver', sub:'parenchyma', label:'Fatty liver',
+    description:'Increased brightness of liver parenchyma.',
+    diagnosis:'Fatty liver' },
+  { id:'lpa2', section:'liver', sub:'parenchyma', label:'Diffuse liver parenchymal disease',
+    description:'Heterogenous echogenicity and increased brightness of liver parenchyma.',
+    diagnosis:'Diffuse liver parenchymal disease' },
+  { id:'lpa3', section:'liver', sub:'parenchyma', label:'Chronic liver parenchymal disease',
+    description:'Heterogenous echogenicity of parenchyma.',
+    diagnosis:'Chronic liver parenchymal disease' },
+  { id:'lpa4', section:'liver', sub:'parenchyma', label:'Fatty liver, moderate',
+    description:'Increased brightness of liver parenchyma with far attenuation and blurred intrahepatic vessels and diaphragm.',
+    diagnosis:'Fatty liver, moderate' },
+  { id:'lpa5', section:'liver', sub:'parenchyma', label:'Liver cirrhosis',
+    description:'Smaller size of liver with irregular surface and coarse parenchyma.',
+    diagnosis:'Liver cirrhosis' },
+
+  // Liver – Lesion
+  { id:'lle1', section:'liver', sub:'lesion', label:'Hepatic cyst',
+    description:'One cystic lesion at S7/8, 30.5 mm.',
+    diagnosis:'Hepatic cyst' },
+  { id:'lle2', section:'liver', sub:'lesion', label:'Hepatic nodule',
+    description:'One hyperechoic nodule at S6, 6 mm.',
+    diagnosis:'Hepatic nodule' },
+  { id:'lle3', section:'liver', sub:'lesion', label:'Hepatic tumor',
+    description:'One mixed-echoic tumor at S8, 20 mm.',
+    diagnosis:'Hepatic tumor' },
+
+  // Biliary – Gallbladder
+  { id:'bga1', section:'biliary', sub:'gallbladder', label:'Gallbladder polyp',
+    description:'Few hyperechoic foci without acoustic shadow, max 2 mm.',
+    diagnosis:'Gallbladder polyp' },
+  { id:'bga2', section:'biliary', sub:'gallbladder', label:'Gallbladder wall thickening',
+    description:'Thickened gallbladder wall, 5.9mm in thickness.',
+    diagnosis:'Gallbladder wall thickening' },
+  { id:'bga3', section:'biliary', sub:'gallbladder', label:'Gallstones',
+    description:'Few hyperechoic foci with acoustic shadow, max 5 mm.',
+    diagnosis:'Gallstones' },
+  { id:'bga4', section:'biliary', sub:'gallbladder', label:'Gallbladder adenomyomatosis',
+    description:'Thicken gallbladder wall (mm) and few hyperechoic foci with comet tail, max 2 mm.',
+    diagnosis:'Gallbladder adenomyomatosis' },
+
+  // Biliary – CBD
+  { id:'bcd1', section:'biliary', sub:'cbd', label:'CBD dilatation',
+    description:'dilated, measured as 10 mm.',
+    diagnosis:'CBD dilatation' },
+
+  // Spleen
+  { id:'sp1', section:'spleen', label:'Splenomegaly',
+    description:'Enlarged, 120 mm in length.',
+    diagnosis:'Splenomegaly' },
+
+  // Kidney
+  { id:'ki1', section:'kidney', label:'Hydronephrosis',
+    description:null, diagnosis:'Hydronephrosis' },
+  { id:'ki2', section:'kidney', label:'Renal hyperechoic spots, r/o calcifications',
+    description:'Few hyperechoic spots without acoustic shadow in right kidney, max 2 mm.',
+    diagnosis:'Renal hyperechoic spots, r/o calcifications' },
+  { id:'ki3', section:'kidney', label:'Renal hyperechoic spots, r/o stones',
+    description:'Few hyperechoic spots with acoustic shadow in right kidney, max 2 mm.',
+    diagnosis:'Renal hyperechoic spots, r/o stones' },
+
+  // Comments
+  { id:'co1', section:'comments', label:'OPD and sono follow up.',      description:'OPD and sono follow up.',      diagnosis:null },
+  { id:'co2', section:'comments', label:'Correlate with other images.', description:'Correlate with other images.', diagnosis:null },
+  { id:'co3', section:'comments', label:'Further images.',              description:'Further images.',              diagnosis:null },
+  { id:'co4', section:'comments', label:'Urology consultation.',        description:'Urology consultation.',        diagnosis:null },
+];
+
+const DEFAULTS = {
+  purpose:  '',
+  liver:    'Parenchyma: \nLesion: \nPortal vein: Patent',
+  biliary:  'Gall bladder: Negative.\nIHDs: Negative.\nCBD: Negative.',
+  pancreas: 'Negative at body and part of head and tail, part of head and tail blocked by bowel gas.',
+  spleen:   'Negative',
+  kidney:   'No hydronephrosis.',
+  others:   '1. No ascites.\n2. Abdominal aorta, IVC and LN: Partial obscured by bowel gas, otherwise grossly normal.',
+  diagnosis:'',
+  comments: '',
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentMode = null;
+const selected = new Set();
+let portalVeinPatent = true;
+let ihdNegative = true;
+
+// ============================================================
+// AUTO-RESIZE TEXTAREA
+// ============================================================
+function autoResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+
+function autoResizeAll() {
+  document.querySelectorAll('#right textarea').forEach(autoResize);
+}
+
+// ============================================================
+// INIT RIGHT PANEL
+// ============================================================
+function initRight() {
+  const resetBar = `<div class="reset-bar"><button class="reset-btn" onclick="resetAll()">↺ Reset All</button></div>`;
+  const sections = SECTIONS.map(s => `
+    <div class="right-section ${s.cls}">
+      <div class="right-section-header">
+        <span class="right-section-title">${s.label}</span>
+        <button class="copy-btn" onclick="copySection('${s.key}')">Copy</button>
+      </div>
+      <textarea id="ta-${s.key}" spellcheck="false"
+        placeholder="${s.label}..."
+        oninput="autoResize(this)"
+        onclick="this.select()"></textarea>
+    </div>
+  `).join('');
+  document.getElementById('right').innerHTML = resetBar + sections + resetBar;
+}
+
+// ============================================================
+// RESET
+// ============================================================
+function resetAll() {
+  selected.clear();
+  portalVeinPatent = true;
+  ihdNegative = true;
+  if (currentMode === 'new') {
+    applyDefaults();
+    renderNewLeft();
+  } else {
+    clearRight();
+    const oldInput = document.getElementById('old-input');
+    if (oldInput) oldInput.value = '';
+  }
+}
+
+// ============================================================
+// MODE SWITCHING
+// ============================================================
+function setMode(m) {
+  currentMode = m;
+  document.getElementById('btn-old').classList.toggle('active', m === 'old');
+  document.getElementById('btn-new').classList.toggle('active', m === 'new');
+  selected.clear();
+  portalVeinPatent = true;
+  ihdNegative = true;
+
+  if (m === 'old') {
+    clearRight();
+    renderOldLeft();
+  } else {
+    applyDefaults();
+    renderNewLeft();
+  }
+}
+
+function clearRight() {
+  SECTIONS.forEach(s => {
+    const ta = document.getElementById('ta-' + s.key);
+    if (ta) { ta.value = ''; autoResize(ta); }
+  });
+}
+
+function applyDefaults() {
+  SECTIONS.forEach(s => {
+    const ta = document.getElementById('ta-' + s.key);
+    if (ta) { ta.value = DEFAULTS[s.key] || ''; autoResize(ta); }
+  });
+}
+
+// ============================================================
+// OLD PATIENT
+// ============================================================
+function renderOldLeft() {
+  document.getElementById('left-content').innerHTML = `
+    <div id="old-area">
+      <p>Paste a previous report below, then click Parse.</p>
+      <textarea id="old-input" placeholder="Paste report here..."></textarea>
+      <button class="parse-btn" onclick="parseAndFill()">Parse Report →</button>
+    </div>
+  `;
+}
+
+function parseAndFill() {
+  const text = document.getElementById('old-input').value;
+  if (!text.trim()) return;
+  const result = parseReport(text);
+  SECTIONS.forEach(s => {
+    const ta = document.getElementById('ta-' + s.key);
+    if (ta) { ta.value = result[s.key] || ''; autoResize(ta); }
+  });
+}
+
+// Join continuation lines onto their subsection header line
+function joinToSubsections(text, subHeaders) {
+  const lines = text.split('\n');
+  const result = [];
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const isHeader = subHeaders.some(p => p.test(line));
+    if (isHeader || result.length === 0) {
+      result.push(line);
+    } else {
+      result[result.length - 1] += ' ' + line;
+    }
+  }
+  return result.join('\n');
+}
+
+const LIVER_SUB   = [/^parenchyma\s*:/i, /^lesion\s*:/i, /^portal\s*vein\s*:/i];
+const BILIARY_SUB = [/^gall\s*bladder\s*:/i, /^ihd\s*s?\s*:/i, /^id\s*s?\s*:/i, /^cbd\s*:/i];
+
+function parseReport(text) {
+  const result = {};
+  SECTIONS.forEach(s => { result[s.key] = ''; });
+
+  const headers = [
+    { key: 'purpose',  re: /purpose\s+of\s+exam/i },
+    { key: 'biliary',  re: /biliary/i },
+    { key: 'liver',    re: /^liver\s*:/im },
+    { key: 'pancreas', re: /^pancreas\s*:/im },
+    { key: 'spleen',   re: /^spleen\s*:/im },
+    { key: 'kidney',   re: /^kidney\s*:/im },
+    { key: 'others',   re: /^others\s*:/im },
+    { key: 'diagnosis',re: /^diagnosis\s*:/im },
+    { key: 'comments', re: /^comments\s*:/im },
+  ];
+
+  const skipPatterns = [/sonographic\s+findings/i];
+
+  const lines = text.split('\n');
+  let current = null;
+  const buckets = {};
+
+  for (const rawLine of lines) {
+    if (skipPatterns.some(re => re.test(rawLine))) continue;
+
+    let matched = false;
+    for (const h of headers) {
+      if (h.re.test(rawLine)) {
+        current = h.key;
+        if (!buckets[current]) buckets[current] = [];
+        const colonIdx = rawLine.indexOf(':');
+        const afterColon = colonIdx >= 0 ? rawLine.slice(colonIdx + 1).trim() : '';
+        if (afterColon) buckets[current].push(afterColon);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched && current) {
+      if (!buckets[current]) buckets[current] = [];
+      buckets[current].push(rawLine);
+    }
+  }
+
+  for (const s of SECTIONS) {
+    if (!buckets[s.key] || !buckets[s.key].length) continue;
+    let t = buckets[s.key].join('\n').replace(/^\n+|\n+$/g, '');
+    t = t.replace(/\[|\]/g, '').trim();
+    if (s.key === 'liver')   t = joinToSubsections(t, LIVER_SUB);
+    if (s.key === 'biliary') t = joinToSubsections(t, BILIARY_SUB);
+    result[s.key] = t;
+  }
+
+  return result;
+}
+
+// ============================================================
+// NEW PATIENT – LEFT PANEL
+// ============================================================
+function renderNewLeft() {
+  function btnGroup(items) {
+    return `<div class="btn-group">${items.map(f =>
+      `<button class="finding-btn${selected.has(f.id) ? ' selected' : ''}"
+              onclick="toggleFinding('${f.id}')"
+              id="fbtn-${f.id}">${escHtml(f.label)}</button>`
+    ).join('')}</div>`;
+  }
+
+  function subsection(label, inner) {
+    return `<div class="left-subsection">
+      <div class="left-subsection-label">${label}</div>${inner}</div>`;
+  }
+
+  let html = '';
+
+  html += `<div class="left-section">
+    <div class="left-section-title">Purpose of Examination</div>
+    ${btnGroup(FINDINGS.filter(f => f.section === 'purpose'))}
+  </div>`;
+
+  html += `<div class="left-section">
+    <div class="left-section-title">Liver</div>
+    ${subsection('Parenchyma', btnGroup(FINDINGS.filter(f => f.section === 'liver' && f.sub === 'parenchyma')))}
+    ${subsection('Lesion', btnGroup(FINDINGS.filter(f => f.section === 'liver' && f.sub === 'lesion')))}
+    ${subsection('Portal Vein', `<div class="btn-group">
+      <button class="finding-btn${portalVeinPatent ? ' selected' : ''}" id="btn-pv" onclick="togglePortalVein()">Patent</button>
+    </div>`)}
+  </div>`;
+
+  html += `<div class="left-section">
+    <div class="left-section-title">Biliary System</div>
+    ${subsection('Gallbladder', btnGroup(FINDINGS.filter(f => f.section === 'biliary' && f.sub === 'gallbladder')))}
+    ${subsection('IHD', `<div class="btn-group">
+      <button class="finding-btn${ihdNegative ? ' selected' : ''}" id="btn-ihd" onclick="toggleIhd()">Negative</button>
+    </div>`)}
+    ${subsection('CBD', btnGroup(FINDINGS.filter(f => f.section === 'biliary' && f.sub === 'cbd')))}
+  </div>`;
+
+  html += `<div class="left-section">
+    <div class="left-section-title">Spleen</div>
+    ${btnGroup(FINDINGS.filter(f => f.section === 'spleen'))}
+  </div>`;
+
+  html += `<div class="left-section">
+    <div class="left-section-title">Kidney</div>
+    ${btnGroup(FINDINGS.filter(f => f.section === 'kidney'))}
+  </div>`;
+
+  html += `<div class="left-section">
+    <div class="left-section-title">Comments</div>
+    ${btnGroup(FINDINGS.filter(f => f.section === 'comments'))}
+  </div>`;
+
+  html += `<p style="color:#334155; font-size:10px; margin-top:6px;">
+    Pancreas and Others are pre-filled on the right — edit directly if needed.
+  </p>`;
+
+  document.getElementById('left-content').innerHTML = html;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ============================================================
+// TOGGLE FINDINGS
+// ============================================================
+function toggleFinding(id) {
+  if (selected.has(id)) { selected.delete(id); } else { selected.add(id); }
+  const btn = document.getElementById('fbtn-' + id);
+  if (btn) btn.classList.toggle('selected', selected.has(id));
+  updateRight();
+}
+
+function togglePortalVein() {
+  portalVeinPatent = !portalVeinPatent;
+  const btn = document.getElementById('btn-pv');
+  if (btn) btn.classList.toggle('selected', portalVeinPatent);
+  updateRight();
+}
+
+function toggleIhd() {
+  ihdNegative = !ihdNegative;
+  const btn = document.getElementById('btn-ihd');
+  if (btn) btn.classList.toggle('selected', ihdNegative);
+  updateRight();
+}
+
+// ============================================================
+// UPDATE RIGHT FROM STATE
+// ============================================================
+function updateRight() {
+  const purposeSel = FINDINGS.filter(f => f.section === 'purpose' && selected.has(f.id));
+  set('purpose', purposeSel.map(f => f.description).join('\n'));
+
+  const liverPa = FINDINGS.filter(f => f.section === 'liver' && f.sub === 'parenchyma' && selected.has(f.id));
+  const liverLe = FINDINGS.filter(f => f.section === 'liver' && f.sub === 'lesion' && selected.has(f.id));
+  set('liver',
+    'Parenchyma: ' + liverPa.map(f => f.description).join(' ') +
+    '\nLesion: '   + liverLe.map(f => f.description).join(' ') +
+    '\nPortal vein: ' + (portalVeinPatent ? 'Patent' : '')
+  );
+
+  const gbSel  = FINDINGS.filter(f => f.section === 'biliary' && f.sub === 'gallbladder' && selected.has(f.id));
+  const cbdSel = FINDINGS.filter(f => f.section === 'biliary' && f.sub === 'cbd' && selected.has(f.id));
+  set('biliary',
+    'Gall bladder: ' + (gbSel.length  ? gbSel.map(f => f.description).join(' ')  : 'Negative.') +
+    '\nIHDs: '       + (ihdNegative   ? 'Negative.'                               : '') +
+    '\nCBD: '        + (cbdSel.length ? cbdSel.map(f => f.description).join(' ') : 'Negative.')
+  );
+
+  const spleenSel = FINDINGS.filter(f => f.section === 'spleen' && selected.has(f.id));
+  set('spleen', spleenSel.length ? spleenSel.map(f => f.description).join('\n') : 'Negative');
+
+  const kidneyDesc = FINDINGS.filter(f => f.section === 'kidney' && selected.has(f.id) && f.description);
+  const hasHydro   = selected.has('ki1');
+  if (hasHydro) {
+    set('kidney', 'Hydronephrosis.' + (kidneyDesc.length ? '\n' + kidneyDesc.map(f => f.description).join('\n') : ''));
+  } else {
+    set('kidney', kidneyDesc.length ? kidneyDesc.map(f => f.description).join('\n') : 'No hydronephrosis.');
+  }
+
+  const diags = FINDINGS.filter(f => selected.has(f.id) && f.diagnosis).map(f => f.diagnosis);
+  set('diagnosis', diags.join('\n'));
+
+  const commentsSel = FINDINGS.filter(f => f.section === 'comments' && selected.has(f.id));
+  set('comments', commentsSel.map(f => f.description).join('\n'));
+}
+
+function set(key, val) {
+  const ta = document.getElementById('ta-' + key);
+  if (!ta) return;
+  ta.value = val;
+  autoResize(ta);
+}
+
+// ============================================================
+// COPY
+// ============================================================
+function copySection(key) {
+  const ta = document.getElementById('ta-' + key);
+  navigator.clipboard.writeText(ta.value).then(() => {
+    const btn = ta.closest('.right-section').querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  }).catch(() => { ta.select(); document.execCommand('copy'); });
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+initRight();
+// Auto-resize all textareas whenever right panel content changes or window resizes
+window.addEventListener('resize', autoResizeAll);
+</script>
+</body>
+</html>

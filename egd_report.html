@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EGD Report Helper</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+      padding: 20px 24px 28px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    /* ── Header ── */
+    .card-header {
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1a3a5c;
+      margin-bottom: 2px;
+    }
+
+    .subtitle { font-size: 0.78rem; color: #6b7a8d; }
+
+    /* ── Two-column body ── */
+    .two-col {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .col-left  { flex: 0 0 480px; }
+    .col-right { flex: 1; min-width: 0; }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7a8d;
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+
+    .section-title:first-child { margin-top: 0; }
+
+    /* ── Divider between left sections ── */
+    .left-divider {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 10px 0;
+    }
+
+    /* ── Pre-medication option rows ── */
+    .premed-option {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 7px;
+      border-radius: 6px;
+      border: 1.5px solid #e2e8f0;
+      margin-bottom: 4px;
+      cursor: pointer;
+      background: #f7fafc;
+      transition: border-color 0.12s, background 0.12s;
+    }
+
+    .premed-option:hover  { border-color: #90cdf4; background: #ebf8ff; }
+    .premed-option.active { border-color: #1a3a5c; background: #ebf8ff; }
+
+    .pm-num {
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #a0aec0;
+      width: 12px;
+    }
+
+    .premed-option.active .pm-num { color: #1a3a5c; }
+
+    .pm-content {
+      font-size: 0.69rem;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 3px;
+      white-space: nowrap;
+    }
+
+    .busco-btn {
+      padding: 1px 7px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 20px;
+      background: #fff;
+      color: #4a5568;
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+
+    .busco-btn:hover { border-color: #3b82f6; color: #2b6cb0; }
+    .busco-btn.on    { background: #2f855a; border-color: #2f855a; color: #fff; }
+
+    .dose-input {
+      width: 42px;
+      padding: 2px 4px;
+      text-align: center;
+      font-size: 0.88rem;
+      font-family: "SF Mono", "Fira Mono", monospace;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 5px;
+      color: #1a202c;
+      background: #f7fafc;
+      -moz-appearance: textfield;
+    }
+
+    .dose-input::-webkit-inner-spin-button,
+    .dose-input::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; }
+    .dose-input:focus { outline: none; border-color: #3b82f6; background: #fff; }
+
+    /* ── Diagnosis rows ── */
+    .dx-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+      flex-wrap: nowrap;
+    }
+
+    .dx-btn {
+      padding: 3px 9px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 20px;
+      background: #f7fafc;
+      color: #4a5568;
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+      flex-shrink: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dx-btn:hover  { border-color: #3b82f6; color: #2b6cb0; background: #ebf8ff; }
+    .dx-btn.active { background: #1a3a5c; border-color: #1a3a5c; color: #fff; }
+
+    .biopsy-group {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .biopsy-btn {
+      padding: 2px 7px;
+      font-size: 0.69rem;
+      font-weight: 600;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 20px;
+      background: #fff;
+      color: #4a5568;
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+
+    .biopsy-btn:hover  { border-color: #805ad5; color: #553c9a; background: #faf5ff; }
+    .biopsy-btn.active { background: #6b46c1; border-color: #6b46c1; color: #fff; }
+
+    .bottle-select {
+      font-size: 0.69rem;
+      padding: 2px 3px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 5px;
+      background: #f7fafc;
+      color: #2d3748;
+      cursor: pointer;
+    }
+
+    .bottle-select:focus { outline: none; border-color: #805ad5; }
+
+    /* ── Advise toggle buttons ── */
+    .advise-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 7px;
+      background: #f7fafc;
+      color: #4a5568;
+      cursor: pointer;
+      transition: all 0.12s;
+      margin-bottom: 4px;
+    }
+
+    .advise-btn:hover  { border-color: #3b82f6; color: #2b6cb0; background: #ebf8ff; }
+    .advise-btn.active { background: #1a3a5c; border-color: #1a3a5c; color: #fff; }
+
+    /* ── Right column divider ── */
+    .col-right-inner {
+      border-left: 1px solid #e2e8f0;
+      padding-left: 20px;
+    }
+
+    /* ── Reset button ── */
+    .btn-reset {
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1.5px solid #fc8181;
+      border-radius: 7px;
+      background: #fff5f5;
+      color: #c53030;
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+
+    .btn-reset:hover { background: #fed7d7; border-color: #e53e3e; }
+    .btn-reset:active { background: #feb2b2; }
+
+    /* ── Right top bar (section-title + reset) ── */
+    .right-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    /* ── Right output sections ── */
+    .output-block { margin-top: 14px; }
+    .output-block:first-child { margin-top: 0; }
+
+    .output-box {
+      width: 100%;
+      min-height: 36px;
+      padding: 8px 11px;
+      font-family: "SF Mono", "Fira Mono", "Courier New", monospace;
+      font-size: 0.79rem;
+      line-height: 1.65;
+      color: #1a202c;
+      background: #f7fafc;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 7px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      outline: none;
+      cursor: text;
+    }
+
+    .output-box:focus { border-color: #3b82f6; background: #fff; }
+    .output-box.empty { color: #a0aec0; font-style: italic; }
+
+    .btn-copy-sm {
+      margin-top: 5px;
+      width: 100%;
+      padding: 5px;
+      background: #38a169;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-copy-sm:hover    { background: #2f855a; }
+    .btn-copy-sm.copied   { background: #2f855a; }
+    .btn-copy-sm:disabled { background: #a0aec0; cursor: default; }
+
+    /* ── Bottom reset bar ── */
+    .right-bottom-bar {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <div class="card-header">
+    <h1>EGD Report Helper</h1>
+    <p class="subtitle">Click findings on the left — editable report text appears on the right</p>
+  </div>
+
+  <div class="two-col">
+
+    <!-- ══════════════════════════════════════════
+         LEFT COLUMN
+    ══════════════════════════════════════════ -->
+    <div class="col-left">
+
+      <!-- 1. Premedication -->
+      <div class="section-title">Pre-medication</div>
+
+      <div class="premed-option" id="pm-opt-1" onclick="selectPremedOption(1)">
+        <span class="pm-num">1</span>
+        <div class="pm-content">
+          <button class="busco-btn" id="busco-1" onclick="event.stopPropagation(); toggleBusco(1)">Busco 10mg IV</button>
+          + Dorm. 1mg IV + Rapi. 0.5mg IV + Propofol
+          <input class="dose-input" id="prop-1" type="number" min="0" placeholder="—" oninput="updatePremed()" onclick="event.stopPropagation()">mg IV
+        </div>
+      </div>
+
+      <div class="premed-option" id="pm-opt-2" onclick="selectPremedOption(2)">
+        <span class="pm-num">2</span>
+        <div class="pm-content">
+          <button class="busco-btn" id="busco-2" onclick="event.stopPropagation(); toggleBusco(2)">Busco 10mg IV</button>
+          + Dorm. 0.75mg IV + Rapi. 0.375mg IV + Propofol
+          <input class="dose-input" id="prop-2" type="number" min="0" placeholder="—" oninput="updatePremed()" onclick="event.stopPropagation()">mg IV
+        </div>
+      </div>
+
+      <div class="premed-option" id="pm-opt-3" onclick="selectPremedOption(3)">
+        <span class="pm-num">3</span>
+        <div class="pm-content">
+          <button class="busco-btn" id="busco-3" onclick="event.stopPropagation(); toggleBusco(3)">Busco 10mg IV</button>
+          + Dorm. 0.5mg IV + Rapi. 0.25mg IV + Propofol
+          <input class="dose-input" id="prop-3" type="number" min="0" placeholder="—" oninput="updatePremed()" onclick="event.stopPropagation()">mg IV
+        </div>
+      </div>
+
+      <div class="premed-option" id="pm-opt-4" onclick="selectPremedOption(4)">
+        <span class="pm-num">4</span>
+        <div class="pm-content">Butylscopolamine 10mg IM</div>
+      </div>
+
+      <hr class="left-divider">
+
+      <!-- 2. Esophagus -->
+      <div class="section-title">Esophagus</div>
+      <div id="esophagus-rows"></div>
+
+      <hr class="left-divider">
+
+      <!-- 3. Stomach -->
+      <div class="section-title">Stomach</div>
+      <div id="stomach-rows"></div>
+
+      <hr class="left-divider">
+
+      <!-- 4. Duodenum -->
+      <div class="section-title">Duodenum</div>
+      <div id="duodenum-rows"></div>
+
+      <hr class="left-divider">
+
+      <!-- 5. Advise -->
+      <div class="section-title">Advise</div>
+      <div id="advise-rows"></div>
+
+    </div><!-- /col-left -->
+
+    <!-- ══════════════════════════════════════════
+         RIGHT COLUMN
+    ══════════════════════════════════════════ -->
+    <div class="col-right">
+      <div class="col-right-inner">
+
+        <!-- Top reset bar -->
+        <div class="right-top-bar">
+          <span class="section-title" style="margin:0">Pre-medication</span>
+          <button class="btn-reset" onclick="resetAll()">Reset All</button>
+        </div>
+
+        <!-- 1. Premedication output -->
+        <div class="output-block" style="margin-top:6px">
+          <div class="output-box empty" id="out-premed" contenteditable="true">Select a pre-medication option on the left</div>
+          <button class="btn-copy-sm" id="btn-copy-premed" onclick="copySection('out-premed','btn-copy-premed')" disabled>Copy Pre-medication</button>
+        </div>
+
+        <!-- 2. Esophagus output -->
+        <div class="output-block">
+          <div class="section-title">Esophagus</div>
+          <div class="output-box empty" id="out-esophagus" contenteditable="true">No findings selected</div>
+          <button class="btn-copy-sm" id="btn-copy-esophagus" onclick="copySection('out-esophagus','btn-copy-esophagus')" disabled>Copy Esophagus</button>
+        </div>
+
+        <!-- 3. Stomach output -->
+        <div class="output-block">
+          <div class="section-title">Stomach</div>
+          <div class="output-box empty" id="out-stomach" contenteditable="true">No findings selected</div>
+          <button class="btn-copy-sm" id="btn-copy-stomach" onclick="copySection('out-stomach','btn-copy-stomach')" disabled>Copy Stomach</button>
+        </div>
+
+        <!-- 4. Duodenum output -->
+        <div class="output-block">
+          <div class="section-title">Duodenum</div>
+          <div class="output-box empty" id="out-duodenum" contenteditable="true">No findings selected</div>
+          <button class="btn-copy-sm" id="btn-copy-duodenum" onclick="copySection('out-duodenum','btn-copy-duodenum')" disabled>Copy Duodenum</button>
+        </div>
+
+        <!-- 5. Diagnosis output -->
+        <div class="output-block">
+          <div class="section-title">Diagnosis</div>
+          <div class="output-box empty" id="out-diagnosis" contenteditable="true">No diagnoses selected</div>
+          <button class="btn-copy-sm" id="btn-copy-diagnosis" onclick="copySection('out-diagnosis','btn-copy-diagnosis')" disabled>Copy Diagnosis</button>
+        </div>
+
+        <!-- 6. Advise output -->
+        <div class="output-block">
+          <div class="section-title">Advise</div>
+          <div class="output-box empty" id="out-advise" contenteditable="true">No advise selected</div>
+          <button class="btn-copy-sm" id="btn-copy-advise" onclick="copySection('out-advise','btn-copy-advise')" disabled>Copy Advise</button>
+        </div>
+
+        <!-- Bottom reset bar -->
+        <div class="right-bottom-bar">
+          <button class="btn-reset" onclick="resetAll()">Reset All</button>
+        </div>
+
+      </div>
+    </div><!-- /col-right -->
+
+  </div><!-- /two-col -->
+</div><!-- /card -->
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════ */
+
+const ESOPHAGUS = [
+  { name: 'Esophageal inlet patch',                     text: 'One reddish mucosa at 16 cm from incisors.' },
+  { name: 'Esophageal subepithelial lesion',             text: 'One protruding lesion with intact overlying mucosa at 20 cm from incisors.' },
+  { name: 'Reflux esophagitis, Los Angeles Grade A',     text: 'Mucosal break less than 5 mm at esophagocardiac junction.' },
+  { name: 'Reflux esophagitis, Los Angeles Grade B',     text: 'Mucosal break more than 5 mm at esophagocardiac junction.' },
+  { name: 'Reflux esophagitis, Los Angeles Grade C',     text: 'Mucosal break extending over multiple folds, covering <75% of the esophageal circumference.' },
+  { name: 'Reflux esophagitis, Los Angeles Grade D',     text: 'Mucosal break extending over multiple folds, covering >75% of the esophageal circumference.' },
+  { name: 'Esophageal candidiasis',                      text: 'Seveal small whitish plaques over middle and lower esophagus, r/o esophageal candidiasis.' },
+  { name: 'Sentinal polyp',                              text: 'One polypoid lesion (mm) at esophagocardiac junction.' },
+  { name: 'Endoscopic suspected esophageal metaplasia',  text: 'Salmon-colored mucosa extending proximally from the gastroesophageal junction (GEJ), Prague classfication CxMx.' },
+];
+
+const STOMACH = [
+  { name: 'Hemorrhagic gastritis',        text: 'Intramural hemorrhagic spots over fundus and body.' },
+  { name: 'Superficial gastritis',         text: 'Mucosal hyperemia at body.' },
+  { name: 'Erosive gastritis',             text: 'Few erosions with hematin coating at antrum.' },
+  { name: 'Atrophic gastritis',            text: 'Atrophic mucosal appearance at antrum.' },
+  { name: 'r/o intestinal metaplasia',     text: 'Few reddish mucosal plaques at antrum.' },
+  { name: 'Gastric ulcer',                 text: 'One H1 ulcer (mm) at antrum.' },
+  { name: 'Gastric erosion',               text: 'One erosion at antrum.' },
+  { name: 'Gastric subepithelial lesion',  text: 'One protruding lesion (mm) with intact overlying mucosa at greater curvature site of body.' },
+  { name: 'r/o early gastric cancer',      text: 'One 0-IIa reddish mucosal lesion (mm) with irregular microsurface and irregular microvessel pattern at greater curvature site of body.' },
+  { name: 'r/o advanced gastric cancer',   text: 'One ulcerative lesion (mm) with friable mucosa and easy touch bleeding at greater curvature site of body.' },
+];
+
+const DUODENUM = [
+  { name: 'Duodenal ulcer',                    text: 'One H1 ulcer at anterior wall of bulb.' },
+  { name: 'Bulbitis',                           text: 'Mucosal hyperemia at bulb.' },
+  { name: 'r/o Brunner\'s gland hyperplasia',  text: 'Few polypoid lesions (2 mm) at bulb, r/o Brunner\'s gland hyperplasia.' },
+  { name: 'r/o gastric heterotopia',            text: 'Few polypoid lesions extending from pylorus, r/o gastric heterotopia.' },
+  { name: 'Duodenal subepithelial lesion',      text: 'One protruding lesion (mm) with intact overlying mucosa at bulb.' },
+  { name: 'Negative',                           text: 'Negative to second portion and ampulla.' },
+  { name: 'Ampulla not observed',               text: 'Negative to second portion. Ampulla not observed.' },
+];
+
+const ADVISE = [
+  'GI OPD follow up.',
+  'H. pylori eradication if H. pylori found.',
+  'Esophagogastroduodenoscopy follow up if indicated.',
+];
+
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+
+let activePremedOption = null;
+const buscoState = { 1: false, 2: false, 3: false };
+
+const premedDrugs = {
+  1: { dorm: '1',    rapi: '0.5',   propId: 'prop-1' },
+  2: { dorm: '0.75', rapi: '0.375', propId: 'prop-2' },
+  3: { dorm: '0.5',  rapi: '0.25',  propId: 'prop-3' },
+};
+
+// state[section][index] = { selected, biopsied, bottle }
+const state = {
+  esophagus: ESOPHAGUS.map(() => ({ selected: false, biopsied: false, bottle: '1' })),
+  stomach:   STOMACH.map(()   => ({ selected: false, biopsied: false, bottle: '1' })),
+  duodenum:  DUODENUM.map(()  => ({ selected: false, biopsied: false, bottle: '1' })),
+};
+
+const adviseState = ADVISE.map(() => false);
+
+/* ═══════════════════════════════════════════════════════
+   BUILD LEFT-SIDE ROWS
+═══════════════════════════════════════════════════════ */
+
+function buildRows(containerId, section, data) {
+  const container = document.getElementById(containerId);
+  data.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'dx-row';
+
+    // Diagnosis toggle button
+    const dxBtn = document.createElement('button');
+    dxBtn.className = 'dx-btn';
+    dxBtn.id = `dx-${section}-${i}`;
+    dxBtn.title = item.name;
+    dxBtn.textContent = item.name;
+    dxBtn.onclick = () => toggleDx(section, i);
+
+    // Biopsy group
+    const bGroup = document.createElement('div');
+    bGroup.className = 'biopsy-group';
+
+    const bBtn = document.createElement('button');
+    bBtn.className = 'biopsy-btn';
+    bBtn.id = `biopsy-${section}-${i}`;
+    bBtn.textContent = 'biopsy';
+    bBtn.onclick = () => toggleBiopsy(section, i);
+
+    const sel = document.createElement('select');
+    sel.className = 'bottle-select';
+    sel.id = `bottle-${section}-${i}`;
+    ['1','2','3','4','5'].forEach(digit => {
+      const opt = document.createElement('option');
+      opt.value = digit;
+      opt.textContent = digit;
+      sel.appendChild(opt);
+    });
+    sel.value = '1';
+    sel.onchange = () => {
+      state[section][i].bottle = sel.value;
+      renderRight();
+    };
+
+    bGroup.appendChild(bBtn);
+    bGroup.appendChild(sel);
+
+    row.appendChild(dxBtn);
+    row.appendChild(bGroup);
+    container.appendChild(row);
+  });
+}
+
+function buildAdvise() {
+  const container = document.getElementById('advise-rows');
+  ADVISE.forEach((text, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'advise-btn';
+    btn.id = `advise-${i}`;
+    btn.textContent = text;
+    btn.onclick = () => toggleAdvise(i);
+    container.appendChild(btn);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   TOGGLE HANDLERS
+═══════════════════════════════════════════════════════ */
+
+function toggleDx(section, i) {
+  state[section][i].selected = !state[section][i].selected;
+  document.getElementById(`dx-${section}-${i}`).classList.toggle('active', state[section][i].selected);
+  if (!state[section][i].selected) {
+    state[section][i].biopsied = false;
+    document.getElementById(`biopsy-${section}-${i}`).classList.remove('active');
+  }
+  renderRight();
+}
+
+function toggleBiopsy(section, i) {
+  state[section][i].biopsied = !state[section][i].biopsied;
+  document.getElementById(`biopsy-${section}-${i}`).classList.toggle('active', state[section][i].biopsied);
+  renderRight();
+}
+
+function toggleAdvise(i) {
+  adviseState[i] = !adviseState[i];
+  document.getElementById(`advise-${i}`).classList.toggle('active', adviseState[i]);
+  renderRight();
+}
+
+/* ═══════════════════════════════════════════════════════
+   PREMEDICATION
+═══════════════════════════════════════════════════════ */
+
+function selectPremedOption(n) {
+  activePremedOption = n;
+  [1,2,3,4].forEach(i => {
+    document.getElementById(`pm-opt-${i}`).classList.toggle('active', i === n);
+  });
+  updatePremed();
+}
+
+function toggleBusco(n) {
+  buscoState[n] = !buscoState[n];
+  const btn = document.getElementById(`busco-${n}`);
+  btn.classList.toggle('on', buscoState[n]);
+  btn.textContent = buscoState[n] ? 'Busco 10mg IV ✓' : 'Busco 10mg IV';
+  updatePremed();
+}
+
+function updatePremed() {
+  const box     = document.getElementById('out-premed');
+  const copyBtn = document.getElementById('btn-copy-premed');
+  const n       = activePremedOption;
+
+  if (!n) {
+    setOutput(box, copyBtn, null);
+    return;
+  }
+
+  let text = '';
+  if (n === 4) {
+    text = 'Butylscopolamine 10 mg IM';
+  } else {
+    const d    = premedDrugs[n];
+    const prop = document.getElementById(d.propId).value;
+    const parts = [];
+    if (buscoState[n]) parts.push('Butylscopolamine 10 mg IV');
+    parts.push(`Dormicum ${d.dorm} mg IV`);
+    parts.push(`Rapifen ${d.rapi} mg IV`);
+    if (prop) parts.push(`Propofol ${prop} mg IV`);
+    text = parts.join(' + ');
+  }
+
+  setOutput(box, copyBtn, text);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER RIGHT SIDE
+═══════════════════════════════════════════════════════ */
+
+function findingLine(item, s) {
+  let line = item.text;
+  if (s.biopsied) {
+    line = line.replace(/\.$/, '') + `, biopsy x 1# done in bottle (${s.bottle}).`;
+  }
+  return line;
+}
+
+function diagnosisLine(item, s) {
+  let line = item.name;
+  if (s.biopsied) {
+    line += `, s/p biopsy (bottle (${s.bottle}))`;
+  }
+  return line;
+}
+
+function renderSection(sectionKey, data, outId, copyId) {
+  const box     = document.getElementById(outId);
+  const copyBtn = document.getElementById(copyId);
+  const lines   = [];
+  data.forEach((item, i) => {
+    const s = state[sectionKey][i];
+    if (s.selected) lines.push(findingLine(item, s));
+  });
+  setOutput(box, copyBtn, lines.length ? lines.join('\n') : null);
+}
+
+function renderDiagnosis() {
+  const box     = document.getElementById('out-diagnosis');
+  const copyBtn = document.getElementById('btn-copy-diagnosis');
+  const lines   = [];
+  [
+    { key: 'esophagus', data: ESOPHAGUS },
+    { key: 'stomach',   data: STOMACH   },
+    { key: 'duodenum',  data: DUODENUM  },
+  ].forEach(({ key, data }) => {
+    data.forEach((item, i) => {
+      const s = state[key][i];
+      if (s.selected) lines.push(diagnosisLine(item, s));
+    });
+  });
+  setOutput(box, copyBtn, lines.length ? lines.join('\n') : null);
+}
+
+function renderAdvise() {
+  const box     = document.getElementById('out-advise');
+  const copyBtn = document.getElementById('btn-copy-advise');
+  const lines   = ADVISE.filter((_, i) => adviseState[i]);
+  setOutput(box, copyBtn, lines.length ? lines.join('\n') : null);
+}
+
+function renderRight() {
+  renderSection('esophagus', ESOPHAGUS, 'out-esophagus', 'btn-copy-esophagus');
+  renderSection('stomach',   STOMACH,   'out-stomach',   'btn-copy-stomach');
+  renderSection('duodenum',  DUODENUM,  'out-duodenum',  'btn-copy-duodenum');
+  renderDiagnosis();
+  renderAdvise();
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════════════ */
+
+function resetAll() {
+  // Premedication
+  activePremedOption = null;
+  [1,2,3,4].forEach(i => {
+    document.getElementById(`pm-opt-${i}`).classList.remove('active');
+  });
+  [1,2,3].forEach(i => {
+    buscoState[i] = false;
+    const btn = document.getElementById(`busco-${i}`);
+    btn.classList.remove('on');
+    btn.textContent = 'Busco 10mg IV';
+    document.getElementById(`prop-${i}`).value = '';
+  });
+  updatePremed();
+
+  // Findings
+  ['esophagus','stomach','duodenum'].forEach(section => {
+    state[section].forEach((s, i) => {
+      s.selected = false;
+      s.biopsied = false;
+      s.bottle   = '1';
+      document.getElementById(`dx-${section}-${i}`).classList.remove('active');
+      document.getElementById(`biopsy-${section}-${i}`).classList.remove('active');
+      document.getElementById(`bottle-${section}-${i}`).value = '1';
+    });
+  });
+
+  // Advise
+  adviseState.forEach((_, i) => {
+    adviseState[i] = false;
+    document.getElementById(`advise-${i}`).classList.remove('active');
+  });
+
+  renderRight();
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════ */
+
+function setOutput(box, copyBtn, text) {
+  if (text === null || text === '') {
+    box.classList.add('empty');
+    copyBtn.disabled = true;
+  } else {
+    box.classList.remove('empty');
+    box.textContent = text;
+    copyBtn.disabled = false;
+  }
+}
+
+function copySection(boxId, btnId) {
+  const box  = document.getElementById(boxId);
+  const btn  = document.getElementById(btnId);
+  const text = box.innerText || box.textContent;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => flashCopied(btn));
+  } else {
+    const el = document.createElement('div');
+    el.setAttribute('contenteditable', 'true');
+    el.innerHTML = text.replace(/\n/g, '<br>');
+    el.style.position = 'fixed';
+    el.style.opacity  = '0';
+    document.body.appendChild(el);
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand('copy');
+    sel.removeAllRanges();
+    document.body.removeChild(el);
+    flashCopied(btn);
+  }
+}
+
+function flashCopied(btn) {
+  const orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.classList.remove('copied');
+  }, 2000);
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+
+buildRows('esophagus-rows', 'esophagus', ESOPHAGUS);
+buildRows('stomach-rows',   'stomach',   STOMACH);
+buildRows('duodenum-rows',  'duodenum',  DUODENUM);
+buildAdvise();
+</script>
+</body>
+</html>

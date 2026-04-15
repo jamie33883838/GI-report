@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colonoscopy Report</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+      padding: 20px 24px 22px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .card-header {
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1a3a5c;
+      margin-bottom: 2px;
+    }
+
+    .subtitle {
+      font-size: 0.78rem;
+      color: #6b7a8d;
+    }
+
+    .two-col {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .col-left {
+      flex: 0 0 490px;
+    }
+
+    .col-right {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .col-right-inner {
+      border-left: 1px solid #e2e8f0;
+      padding-left: 20px;
+    }
+
+    .section-title {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #6b7a8d;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    /* Polyp entries */
+    .polyp-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .polyp-entry {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 7px;
+      padding: 8px 10px;
+      background: #fafbfc;
+    }
+
+    .polyp-row1 {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 7px;
+    }
+
+    .polyp-label {
+      font-weight: 700;
+      color: #1a3a5c;
+      font-size: 0.82rem;
+      flex-shrink: 0;
+      min-width: 26px;
+    }
+
+    .row-text {
+      color: #4a5568;
+      white-space: nowrap;
+      font-size: 0.76rem;
+    }
+
+    select.num-select,
+    select.morph-select,
+    select.loc-select {
+      padding: 3px 5px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 6px;
+      background: #f7fafc;
+      color: #2d3748;
+      font-size: 0.75rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    select.num-select:focus,
+    select.morph-select:focus,
+    select.loc-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: #fff;
+    }
+
+    select.num-select  { width: 68px; }
+    select.morph-select { width: 92px; }
+    select.loc-select  { width: 178px; }
+
+    input.size-input,
+    input.dist-input {
+      width: 44px;
+      padding: 3px 4px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 6px;
+      background: #f7fafc;
+      color: #2d3748;
+      font-size: 0.76rem;
+      font-family: inherit;
+      text-align: center;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    input.size-input:focus,
+    input.dist-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: #fff;
+    }
+
+    input.size-input::-webkit-outer-spin-button,
+    input.size-input::-webkit-inner-spin-button,
+    input.dist-input::-webkit-outer-spin-button,
+    input.dist-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+
+    /* Procedure row */
+    .polyp-row2 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .proc-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 8px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 6px;
+      background: #f7fafc;
+      color: #4a5568;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .proc-btn:hover {
+      border-color: #90cdf4;
+      background: #ebf8ff;
+      color: #2b6cb0;
+    }
+
+    .proc-btn.active {
+      background: #1a3a5c;
+      border-color: #1a3a5c;
+      color: #fff;
+    }
+
+    .proc-input {
+      width: 40px;
+      padding: 1px 3px;
+      border: 1px solid #a0aec0;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.9);
+      color: #2d3748;
+      font-size: 0.72rem;
+      font-family: inherit;
+      text-align: center;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+
+    .proc-btn.active .proc-input {
+      border-color: rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+    }
+
+    .proc-btn.active .proc-input::placeholder {
+      color: rgba(255,255,255,0.45);
+    }
+
+    .proc-input:focus {
+      outline: none;
+    }
+
+    .proc-btn.active .proc-input:focus {
+      border-color: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.28);
+    }
+
+    /* Add button */
+    .add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 14px;
+      background: #f7fafc;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 20px;
+      color: #4a5568;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      font-family: inherit;
+    }
+
+    .add-btn:hover {
+      border-color: #3b82f6;
+      color: #2b6cb0;
+      background: #ebf8ff;
+    }
+
+    .add-btn:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    /* Right column output */
+    .output-section {
+      margin-bottom: 16px;
+    }
+
+    .output-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .output-divider {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 14px 0;
+    }
+
+    .output-area {
+      width: 100%;
+      min-height: 80px;
+      padding: 10px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 7px;
+      background: #f7fafc;
+      color: #2d3748;
+      font-family: "SF Mono", "Fira Mono", "Courier New", monospace;
+      font-size: 0.81rem;
+      line-height: 1.65;
+      resize: vertical;
+      transition: border-color 0.15s;
+    }
+
+    .output-area:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: #fff;
+    }
+
+    .btn-copy {
+      margin-top: 7px;
+      width: 100%;
+      padding: 7px;
+      background: #38a169;
+      color: #fff;
+      font-size: 0.84rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+
+    .btn-copy:hover:not(:disabled) { background: #2f855a; }
+    .btn-copy.copied { background: #2f855a; }
+    .btn-copy:disabled { background: #a0aec0; cursor: default; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .header-text { flex: 1; }
+
+    .btn-reset {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 13px;
+      background: #fff5f5;
+      border: 1.5px solid #fc8181;
+      border-radius: 20px;
+      color: #c53030;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      font-family: inherit;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-reset:hover {
+      background: #fed7d7;
+      border-color: #e53e3e;
+      color: #9b2c2c;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="card-header">
+    <div class="header-text">
+      <h1>Colonoscopy Report</h1>
+      <p class="subtitle">Polyp documentation and clinical note generator</p>
+    </div>
+    <button class="btn-reset" onclick="resetAll()">↺ Reset</button>
+  </div>
+
+  <div class="two-col">
+    <!-- Left: polyp inputs -->
+    <div class="col-left">
+      <div class="section-title">Polyp Entries</div>
+      <div class="polyp-entries" id="polyp-entries"></div>
+      <button class="add-btn" id="add-btn" onclick="addPolyp()">+ Add polyp</button>
+    </div>
+
+    <!-- Right: generated output -->
+    <div class="col-right">
+      <div class="col-right-inner">
+        <div class="output-section">
+          <div class="section-title">Colonoscopic Findings</div>
+          <textarea class="output-area" id="findings-output" readonly
+            placeholder="Fill in polyp details on the left to generate findings..."></textarea>
+          <button class="btn-copy" id="btn-copy-findings" onclick="copyFindings()" disabled>Copy Findings</button>
+        </div>
+
+        <hr class="output-divider">
+
+        <div class="output-section">
+          <div class="section-title">Summary</div>
+          <textarea class="output-area" id="summary-output" readonly
+            placeholder="Fill in polyp details on the left to generate summary..."></textarea>
+          <button class="btn-copy" id="btn-copy-summary" onclick="copySummary()" disabled>Copy Summary</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    <button class="btn-reset" onclick="resetAll()">↺ Reset</button>
+  </div>
+</div>
+
+<script>
+  const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  let activeLetters = ['A', 'B', 'C', 'D', 'E'];
+
+  const NUMBERS = ['One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
+
+  const MORPHOLOGIES = ['Is','Ip','Isp','IIa','IIb','IIc','III','LST (Lateral spreading tumor)'];
+
+  const LOCATIONS = [
+    { value: 'cecum',                 label: 'cecum',                 adjective: 'Cecal' },
+    { value: 'ascending colon',       label: 'ascending colon',       adjective: 'Ascending colonic' },
+    { value: 'hepatic flexure',       label: 'hepatic flexure',       adjective: 'Hepatic flexure' },
+    { value: 'transverse colon',      label: 'transverse colon',      adjective: 'Transverse colonic' },
+    { value: 'splenic flexure',       label: 'splenic flexure',       adjective: 'Splenic flexure' },
+    { value: 'descending colon',      label: 'descending colon',      adjective: 'Descending colonic' },
+    { value: 'sigmoid colon',         label: 'sigmoid colon',         adjective: 'Sigmoid colonic' },
+    { value: 'rectosigmoid junction', label: 'rectosigmoid junction', adjective: 'Rectosigmoid junction' },
+    { value: 'rectum',                label: 'rectum',                adjective: 'Rectal' }
+  ];
+
+  function createPolypEntry(letter) {
+    const entry = document.createElement('div');
+    entry.className = 'polyp-entry';
+    entry.dataset.letter = letter;
+
+    const numOpts = NUMBERS.map(n => `<option value="${n}">${n}</option>`).join('');
+    const morphOpts = MORPHOLOGIES.map(m => `<option value="${m}">${m}</option>`).join('');
+    const locOpts = LOCATIONS.map(l => `<option value="${l.value}">${l.label}</option>`).join('');
+
+    entry.innerHTML = `
+      <div class="polyp-row1">
+        <span class="polyp-label">(${letter}):</span>
+        <select class="num-select" onchange="updateOutput()">${numOpts}</select>
+        <span class="row-text">size of</span>
+        <input type="number" class="size-input" min="1" placeholder="—" oninput="updateOutput()">
+        <span class="row-text">mm,</span>
+        <select class="morph-select" onchange="updateOutput()">${morphOpts}</select>
+        <span class="row-text">, at</span>
+        <input type="number" class="dist-input" min="0" placeholder="—" oninput="autoSelectLocation(this.closest('.polyp-entry'))">
+        <span class="row-text">cm from anal verge</span>
+        <select class="loc-select" onchange="updateOutput()">${locOpts}</select>
+      </div>
+      <div class="polyp-row2">
+        <div class="proc-btn" data-proc="biopsy" onclick="selectProc(this, event)">
+          Biopsy x <input type="text" class="proc-input" placeholder="n" oninput="updateOutput()" onclick="event.stopPropagation()"> # done in (${letter})
+        </div>
+        <div class="proc-btn" data-proc="coldsnare" onclick="selectProc(this, event)">
+          Cold snare polypectomy done in (${letter}) and <input type="text" class="proc-input" placeholder="n" oninput="updateOutput()" onclick="event.stopPropagation()"> hemoclip applied for wound closure
+        </div>
+        <div class="proc-btn" data-proc="emr" onclick="selectProc(this, event)">
+          EMR done in (${letter}) and <input type="text" class="proc-input" placeholder="n" oninput="updateOutput()" onclick="event.stopPropagation()"> hemoclip applied
+        </div>
+      </div>`;
+
+    return entry;
+  }
+
+  function selectProc(btn, event) {
+    const entry = btn.closest('.polyp-entry');
+    const wasActive = btn.classList.contains('active');
+    entry.querySelectorAll('.proc-btn').forEach(b => b.classList.remove('active'));
+    if (!wasActive) btn.classList.add('active');
+    updateOutput();
+  }
+
+  function addPolyp() {
+    if (activeLetters.length >= 26) return;
+    const next = LETTERS[activeLetters.length];
+    activeLetters.push(next);
+    document.getElementById('polyp-entries').appendChild(createPolypEntry(next));
+    if (activeLetters.length >= 26) {
+      const btn = document.getElementById('add-btn');
+      btn.disabled = true;
+      btn.textContent = 'All letters used';
+    }
+    updateOutput();
+  }
+
+  function getAdj(locValue) {
+    const l = LOCATIONS.find(x => x.value === locValue);
+    return l ? l.adjective : locValue;
+  }
+
+  function autoSelectLocation(entry) {
+    const dist = parseInt(entry.querySelector('.dist-input').value, 10);
+    if (!isNaN(dist)) {
+      let loc;
+      if      (dist >= 75) loc = 'cecum';
+      else if (dist >= 61) loc = 'ascending colon';
+      else if (dist === 60) loc = 'hepatic flexure';
+      else if (dist >= 41) loc = 'transverse colon';
+      else if (dist === 40) loc = 'splenic flexure';
+      else if (dist >= 30) loc = 'descending colon';
+      else if (dist >= 17) loc = 'sigmoid colon';
+      else                 loc = 'rectum';
+      entry.querySelector('.loc-select').value = loc;
+    }
+    updateOutput();
+  }
+
+  function hclip(val) {
+    const singular = ['1', 'one'];
+    return singular.includes(val.toString().trim().toLowerCase()) ? 'hemoclip' : 'hemoclips';
+  }
+
+  function generateFindings(seqNum, letter, entry) {
+    const num     = entry.querySelector('.num-select').value;
+    const sizeRaw = entry.querySelector('.size-input').value.trim();
+    const morph   = entry.querySelector('.morph-select').value;
+    const distRaw = entry.querySelector('.dist-input').value.trim();
+    const loc     = entry.querySelector('.loc-select').value;
+    const ap      = entry.querySelector('.proc-btn.active');
+
+    if (!sizeRaw && !distRaw && !ap) return '';
+
+    const size   = sizeRaw || '___';
+    const dist   = distRaw || '___';
+    const plural = num !== 'One' ? 's' : '';
+
+    let procText = '';
+    if (ap) {
+      const pv = ap.querySelector('.proc-input').value.trim();
+      if (ap.dataset.proc === 'biopsy') {
+        procText = ` Biopsy x ${pv || '?'}# done in (${letter}).`;
+      }
+      if (ap.dataset.proc === 'coldsnare') {
+        procText = pv
+          ? ` Cold snare polypectomy done in (${letter}) and ${pv} ${hclip(pv)} applied for wound closure.`
+          : ` Cold snare polypectomy done in (${letter}).`;
+      }
+      if (ap.dataset.proc === 'emr') {
+        procText = pv
+          ? ` EMR (endoscopic mucosal resection) was done after submucosal injection of diluted epinephrine (1:10000) in (${letter}) and ${pv} ${hclip(pv)} applied for wound closure.`
+          : ` EMR (endoscopic mucosal resection) was done after submucosal injection of diluted epinephrine (1:10000) in (${letter}).`;
+      }
+    }
+
+    return `${seqNum}. ${num} ${size}mm ${morph} polyp${plural} noted at ${dist} cm from anal verge (${loc}).${procText}`;
+  }
+
+  function generateSummary(seqNum, letter, entry) {
+    const num     = entry.querySelector('.num-select').value;
+    const sizeRaw = entry.querySelector('.size-input').value.trim();
+    const morph   = entry.querySelector('.morph-select').value;
+    const distRaw = entry.querySelector('.dist-input').value.trim();
+    const loc     = entry.querySelector('.loc-select').value;
+    const ap      = entry.querySelector('.proc-btn.active');
+
+    if (!sizeRaw && !distRaw && !ap) return '';
+
+    const size   = sizeRaw || '___';
+    const plural = num !== 'One' ? 's' : '';
+
+    let procSuffix = '';
+    if (ap) {
+      const pv = ap.querySelector('.proc-input').value.trim();
+      if (ap.dataset.proc === 'biopsy') {
+        procSuffix = `, s/p biopsy`;
+      }
+      if (ap.dataset.proc === 'coldsnare') {
+        procSuffix = pv
+          ? `, s/p cold snare polypectomy, s/p hemoclipping`
+          : `, s/p cold snare polypectomy`;
+      }
+      if (ap.dataset.proc === 'emr') {
+        procSuffix = pv
+          ? `, s/p EMR, s/p hemoclipping`
+          : `, s/p EMR`;
+      }
+    }
+
+    return `${seqNum}. ${getAdj(loc)} polyp${plural}, ${morph}, ${size} mm${procSuffix} (${letter}).`;
+  }
+
+  function updateOutput() {
+    const entries = document.querySelectorAll('.polyp-entry');
+    const fLines = [], sLines = [];
+    let seqNum = 1;
+
+    entries.forEach(e => {
+      const l = e.dataset.letter;
+      const f = generateFindings(seqNum, l, e);
+      const s = generateSummary(seqNum, l, e);
+      if (f || s) {
+        if (f) fLines.push(f);
+        if (s) sLines.push(s);
+        seqNum++;
+      }
+    });
+
+    const nextNum = seqNum;
+    const fHeader = 'The colonoscopy was inserted to cecum at 75 cm from anal verge.';
+    const fFooter = `${nextNum}. Mixed hemorrhoids were noted.`;
+    const sFooter = `${nextNum}. Hemorrhoids.`;
+
+    const fText = fLines.length
+      ? [fHeader, ...fLines, fFooter].join('\n')
+      : '';
+    const sText = sLines.length
+      ? [...sLines, sFooter].join('\n')
+      : '';
+
+    const fArea = document.getElementById('findings-output');
+    const sArea = document.getElementById('summary-output');
+    fArea.value = fText;
+    sArea.value = sText;
+
+    document.getElementById('btn-copy-findings').disabled = !fText;
+    document.getElementById('btn-copy-summary').disabled  = !sText;
+
+    [fArea, sArea].forEach(ta => {
+      ta.style.height = 'auto';
+      ta.style.height = Math.max(80, ta.scrollHeight) + 'px';
+    });
+  }
+
+  function copyText(text, btn) {
+    const div = document.createElement('div');
+    div.contentEditable = 'true';
+    div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;white-space:pre;font-family:"Courier New",Courier,monospace;font-size:11pt;line-height:1.6;background:#fff;color:#000;';
+    div.textContent = text;
+    document.body.appendChild(div);
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(div);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand('copy');
+    sel.removeAllRanges();
+    document.body.removeChild(div);
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  }
+
+  function copyFindings() {
+    copyText(document.getElementById('findings-output').value, document.getElementById('btn-copy-findings'));
+  }
+
+  function copySummary() {
+    copyText(document.getElementById('summary-output').value, document.getElementById('btn-copy-summary'));
+  }
+
+  function resetAll() {
+    activeLetters = ['A', 'B', 'C', 'D', 'E'];
+    const container = document.getElementById('polyp-entries');
+    container.innerHTML = '';
+    activeLetters.forEach(l => container.appendChild(createPolypEntry(l)));
+    const addBtn = document.getElementById('add-btn');
+    addBtn.disabled = false;
+    addBtn.textContent = '+ Add polyp';
+    updateOutput();
+  }
+
+  // Init A–E
+  (function() {
+    const container = document.getElementById('polyp-entries');
+    activeLetters.forEach(l => container.appendChild(createPolypEntry(l)));
+    updateOutput();
+  })();
+</script>
+</body>
+</html>
