@@ -49,8 +49,8 @@
       align-items: flex-start;
     }
 
-    .col-left  { flex: 0 0 480px; }
-    .col-right { flex: 1; min-width: 0; }
+    .col-left  { flex: 1 1 480px; min-width: 0; overflow: hidden; }
+    .col-right { flex: 2 1 300px; min-width: 0; }
 
     /* ── Section titles ── */
     .section-title {
@@ -275,11 +275,13 @@
       white-space: pre-wrap;
       word-break: break-word;
       outline: none;
-      cursor: text;
+      cursor: pointer;
+      user-select: text;
     }
 
-    .output-box:focus { border-color: #3b82f6; background: #fff; }
-    .output-box.empty { color: #a0aec0; font-style: italic; }
+    .output-box:hover:not(.empty) { border-color: #90cdf4; background: #ebf8ff; }
+    .output-box:focus { border-color: #3b82f6; background: #fff; cursor: text; }
+    .output-box.empty { color: #a0aec0; font-style: italic; cursor: default; }
 
     .btn-copy-sm {
       margin-top: 5px;
@@ -354,7 +356,7 @@
 
       <div class="premed-option" id="pm-opt-4" onclick="selectPremedOption(4)">
         <span class="pm-num">4</span>
-        <div class="pm-content">Butylscopolamine 10mg IM</div>
+        <div class="pm-content">Butylscopolamine 20mg IM</div>
       </div>
 
       <hr class="left-divider">
@@ -397,42 +399,42 @@
 
         <!-- 1. Premedication output -->
         <div class="output-block" style="margin-top:6px">
-          <div class="output-box empty" id="out-premed" contenteditable="true">Select a pre-medication option on the left</div>
+          <div class="output-box empty" id="out-premed" contenteditable="true" onclick="selectAllOnClick(this)">Select a pre-medication option on the left</div>
           <button class="btn-copy-sm" id="btn-copy-premed" onclick="copySection('out-premed','btn-copy-premed')" disabled>Copy Pre-medication</button>
         </div>
 
         <!-- 2. Esophagus output -->
         <div class="output-block">
           <div class="section-title">Esophagus</div>
-          <div class="output-box empty" id="out-esophagus" contenteditable="true">No findings selected</div>
+          <div class="output-box empty" id="out-esophagus" contenteditable="true" onclick="selectAllOnClick(this)">No findings selected</div>
           <button class="btn-copy-sm" id="btn-copy-esophagus" onclick="copySection('out-esophagus','btn-copy-esophagus')" disabled>Copy Esophagus</button>
         </div>
 
         <!-- 3. Stomach output -->
         <div class="output-block">
           <div class="section-title">Stomach</div>
-          <div class="output-box empty" id="out-stomach" contenteditable="true">No findings selected</div>
+          <div class="output-box empty" id="out-stomach" contenteditable="true" onclick="selectAllOnClick(this)">No findings selected</div>
           <button class="btn-copy-sm" id="btn-copy-stomach" onclick="copySection('out-stomach','btn-copy-stomach')" disabled>Copy Stomach</button>
         </div>
 
         <!-- 4. Duodenum output -->
         <div class="output-block">
           <div class="section-title">Duodenum</div>
-          <div class="output-box empty" id="out-duodenum" contenteditable="true">No findings selected</div>
+          <div class="output-box empty" id="out-duodenum" contenteditable="true" onclick="selectAllOnClick(this)">No findings selected</div>
           <button class="btn-copy-sm" id="btn-copy-duodenum" onclick="copySection('out-duodenum','btn-copy-duodenum')" disabled>Copy Duodenum</button>
         </div>
 
         <!-- 5. Diagnosis output -->
         <div class="output-block">
           <div class="section-title">Diagnosis</div>
-          <div class="output-box empty" id="out-diagnosis" contenteditable="true">No diagnoses selected</div>
+          <div class="output-box empty" id="out-diagnosis" contenteditable="true" onclick="selectAllOnClick(this)">No diagnoses selected</div>
           <button class="btn-copy-sm" id="btn-copy-diagnosis" onclick="copySection('out-diagnosis','btn-copy-diagnosis')" disabled>Copy Diagnosis</button>
         </div>
 
         <!-- 6. Advise output -->
         <div class="output-block">
           <div class="section-title">Advise</div>
-          <div class="output-box empty" id="out-advise" contenteditable="true">No advise selected</div>
+          <div class="output-box empty" id="out-advise" contenteditable="true" onclick="selectAllOnClick(this)">No advise selected</div>
           <button class="btn-copy-sm" id="btn-copy-advise" onclick="copySection('out-advise','btn-copy-advise')" disabled>Copy Advise</button>
         </div>
 
@@ -475,6 +477,7 @@ const STOMACH = [
   { name: 'Gastric subepithelial lesion',  text: 'One protruding lesion (mm) with intact overlying mucosa at greater curvature site of body.' },
   { name: 'r/o early gastric cancer',      text: 'One 0-IIa reddish mucosal lesion (mm) with irregular microsurface and irregular microvessel pattern at greater curvature site of body.' },
   { name: 'r/o advanced gastric cancer',   text: 'One ulcerative lesion (mm) with friable mucosa and easy touch bleeding at greater curvature site of body.' },
+  { name: 'Gastric polyp',                 text: 'Few Is polyps (2-3 mm) at body.' },
 ];
 
 const DUODENUM = [
@@ -489,7 +492,7 @@ const DUODENUM = [
 
 const ADVISE = [
   'GI OPD follow up.',
-  'H. pylori eradication if H. pylori found.',
+  'H. pylori eradication if H. pylori positive.',
   'Esophagogastroduodenoscopy follow up if indicated.',
 ];
 
@@ -637,7 +640,7 @@ function updatePremed() {
 
   let text = '';
   if (n === 4) {
-    text = 'Butylscopolamine 10 mg IM';
+    text = 'Butylscopolamine 20 mg IM';
   } else {
     const d    = premedDrugs[n];
     const prop = document.getElementById(d.propId).value;
@@ -659,7 +662,7 @@ function updatePremed() {
 function findingLine(item, s) {
   let line = item.text;
   if (s.biopsied) {
-    line = line.replace(/\.$/, '') + `, biopsy x 1# done in bottle (${s.bottle}).`;
+    line = line.replace(/\.$/, '') + `, biopsy x 1# done in (bottle ${s.bottle}).`;
   }
   return line;
 }
@@ -667,7 +670,7 @@ function findingLine(item, s) {
 function diagnosisLine(item, s) {
   let line = item.name;
   if (s.biopsied) {
-    line += `, s/p biopsy (bottle (${s.bottle}))`;
+    line += `, s/p biopsy (bottle ${s.bottle})`;
   }
   return line;
 }
@@ -794,6 +797,15 @@ function copySection(boxId, btnId) {
     document.body.removeChild(el);
     flashCopied(btn);
   }
+}
+
+function selectAllOnClick(el) {
+  if (el.classList.contains('empty')) return;
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
 }
 
 function flashCopied(btn) {
